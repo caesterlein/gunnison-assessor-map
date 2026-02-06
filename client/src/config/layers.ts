@@ -74,4 +74,6 @@ export const LAYERS: LayerConfig[] = [
   },
 ];
 
-export const TIPG_URL = "http://localhost:8000";
+export const TIPG_URL = typeof window !== "undefined"
+  ? `${window.location.origin}/api`
+  : "/api";

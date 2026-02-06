@@ -19,61 +19,63 @@ Shapefiles (GISData/)
 PostGIS Database
     ↓ [OGC Features API]
     ↓
-tipg API (http://localhost:8000)
-    ↓ [GeoJSON]
+tipg API (internal Docker network)
+    ↓ [nginx reverse proxy at /api/*]
     ↓
-React Frontend (MapLibre GL)
+React Frontend (nginx serving static files)
+    ↓
+Browser (http://localhost:3000)
 ```
 
 ### Key Technologies
 
 - **Backend**: PostGIS 16, tipg (OGC Features API)
 - **Frontend**: React 19, MapLibre GL 5, TypeScript, Vite
+- **Web Server**: nginx (serves static files and proxies API requests)
 - **Data Processing**: GDAL/OGR (ogr2ogr), Shapefile format
-- **Infrastructure**: Docker Compose
+- **Infrastructure**: Docker Compose (multi-stage builds)
 
 ## Quick Start
 
 ### Prerequisites
 
 - Docker & Docker Compose
-- Node.js 18+ (for frontend development)
-- npm/yarn
+- Node.js 18+ (only for local frontend development)
 
-### 1. Start Backend Services
+### Start the Application
 
 ```bash
-# Start PostGIS, tipg API, and shapefile loader
+# Start all services (PostGIS, tipg API, shapefile loader, and client)
 docker compose up -d
 
 # Check logs
 docker compose logs -f
 
-# Verify tipg is running
-curl http://localhost:8000/collections
+# Or check specific service logs
+docker compose logs -f client
 ```
 
-The API will be available at `http://localhost:8000/` with OpenAPI documentation.
+Open **[http://localhost:3000](http://localhost:3000)** in your browser to view the map.
 
-### 2. Start Frontend Development Server
-
-```bash
-cd client
-npm install
-npm run dev
-```
-
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+The complete stack is now running:
+- **Web app**: http://localhost:3000 (nginx serving React app)
+- **API**: http://localhost:3000/api/* (proxied to tipg)
+- **Direct API access**: http://localhost:8000 (for debugging)
 
 ## Development Commands
 
-### Backend (Docker)
+### Docker Services (Production Mode)
 
 ```bash
 # Start all services
 docker compose up -d
 
+# Rebuild client after code changes
+docker compose build client
+docker compose up -d client
+
 # View service logs
+docker compose logs -f client
 docker compose logs -f postgis
 docker compose logs -f tipg
 docker compose logs -f loader
@@ -88,13 +90,18 @@ docker compose down
 docker compose down -v
 ```
 
-### Frontend
+### Frontend Development (Hot Reload)
+
+For faster frontend development with hot module replacement:
 
 ```bash
 cd client
 
+# Install dependencies (first time only)
+npm install
+
 # Development server with hot reload
-npm run dev
+npm run dev  # Opens http://localhost:5173
 
 # Build for production
 npm run build
@@ -105,6 +112,12 @@ npm run lint
 # Preview production build
 npm run preview
 ```
+
+**Note**: When using `npm run dev`, update `client/src/config/layers.ts` to use:
+```typescript
+export const TIPG_URL = "http://localhost:8000";
+```
+Then revert to `"/api"` before building the Docker image.
 
 ## Project Structure
 
@@ -122,6 +135,8 @@ npm run preview
 │   ├── TaxParcelAssessor.shp
 │   └── ... (other GIS data)
 └── client/                   # React frontend
+    ├── Dockerfile            # Multi-stage build (Node.js build + nginx)
+    ├── nginx.conf            # Nginx configuration (reverse proxy + SPA)
     ├── src/
     │   ├── components/       # React components (Map, LayerControl, etc.)
     │   ├── config/           # Layer definitions and API configuration
@@ -176,7 +191,7 @@ Edit `client/src/config/layers.ts` and add your layer to the `LAYERS` array:
 docker compose up loader
 ```
 
-Visit `http://localhost:8000/collections` to verify your layer is loaded.
+Visit `http://localhost:3000/api/collections` (or `http://localhost:8000/collections`) to verify your layer is loaded.
 
 ## Database
 
@@ -194,20 +209,26 @@ All shapefiles are transformed to **EPSG:4326 (WGS84)** for web compatibility.
 
 ## API
 
-The OGC Features API (tipg) provides REST endpoints for spatial data:
+The OGC Features API (tipg) provides REST endpoints for spatial data, accessible through nginx proxy:
 
-- `GET /collections` - List all available layers
-- `GET /collections/{id}` - Get layer metadata
-- `GET /collections/{id}/items` - Fetch features as GeoJSON (supports bbox, limit, offset)
-- `GET /collections/{id}/items/{itemId}` - Get single feature
+- `GET /api/collections` - List all available layers
+- `GET /api/collections/{id}` - Get layer metadata
+- `GET /api/collections/{id}/items` - Fetch features as GeoJSON (supports bbox, limit, offset)
+- `GET /api/collections/{id}/items/{itemId}` - Get single feature
 
-Example:
+Example (using proxied API):
 ```bash
 # Get all roads (first 10 features)
-curl "http://localhost:8000/collections/road/items?limit=10"
+curl "http://localhost:3000/api/collections/road/items?limit=10"
 
 # Get features in bounding box
-curl "http://localhost:8000/collections/jurisdictions/items?bbox=-107,38,-106,39"
+curl "http://localhost:3000/api/collections/jurisdictions/items?bbox=-107,38,-106,39"
+```
+
+Direct API access (for debugging):
+```bash
+# Direct access to tipg (bypasses nginx)
+curl "http://localhost:8000/collections"
 ```
 
 ## Troubleshooting
@@ -221,10 +242,12 @@ curl "http://localhost:8000/collections/jurisdictions/items?bbox=-107,38,-106,39
 
 ### Frontend not connecting to API
 
-1. Ensure tipg is running: `docker compose logs tipg`
-2. Test API: `curl http://localhost:8000/collections`
-3. Check frontend config: `client/src/config/`
-4. Check browser console for CORS errors
+1. Ensure all services are running: `docker compose ps`
+2. Check client logs: `docker compose logs client`
+3. Test API proxy: `curl http://localhost:3000/api/collections`
+4. Test direct API: `curl http://localhost:8000/collections`
+5. Check browser console for errors
+6. Verify nginx proxy config: `client/nginx.conf`
 
 ### Database connection issues
 

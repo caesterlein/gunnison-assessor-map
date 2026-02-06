@@ -47,5 +47,12 @@ services:
       postgis:
         condition: service_healthy
 
+  client:
+    build: ./client
+    ports:
+      - "3000:80"
+    depends_on:
+      - tipg
+
 volumes:
   pgdata:
