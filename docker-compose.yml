@@ -1,0 +1,51 @@
+services:
+  postgis:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: gunnison
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  tipg:
+    image: ghcr.io/developmentseed/tipg:latest
+    environment:
+      POSTGRES_HOST: postgis
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASS: postgres
+      POSTGRES_DBNAME: gunnison
+      TIPG_DB_SCHEMAS: '["gunnison"]'
+    ports:
+      - "8000:80"
+    depends_on:
+      postgis:
+        condition: service_healthy
+
+  loader:
+    image: ghcr.io/osgeo/gdal:alpine-small-latest
+    environment:
+      DB_HOST: postgis
+      DB_USER: postgres
+      DB_NAME: gunnison
+      PGPASSWORD: postgres
+    volumes:
+      - ./GISData:/GISData:ro
+      - ./load-shapefiles.sh:/load-shapefiles.sh:ro
+    working_dir: /
+    command: ["/bin/bash", "/load-shapefiles.sh"]
+    depends_on:
+      postgis:
+        condition: service_healthy
+
+volumes:
+  pgdata:
