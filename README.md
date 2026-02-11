@@ -261,7 +261,3 @@ curl "http://localhost:8000/collections"
 - [PostGIS Documentation](https://postgit.org/documentation/)
 - [OGC Features API Spec](https://www.ogc.org/standards/ogcapi-features)
 - [GDAL/OGR Documentation](https://gdal.org/)
-
-## License
-
-[Add your license here]

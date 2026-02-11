@@ -74,6 +74,21 @@ export const LAYERS: LayerConfig[] = [
   },
 ];
 
-export const TIPG_URL = typeof window !== "undefined"
-  ? `${window.location.origin}/api`
-  : "/api";
+export const TIPG_URL = (() => {
+  let url: string;
+  if (typeof window !== "undefined") {
+    if (window.location.port === "5173") {
+      url = "http://localhost:8000";  // Dev mode: connect directly to tipg
+    } else {
+      url = `${window.location.origin}/api`;  // Production: use nginx proxy
+    }
+  } else {
+    url = "/api";
+  }
+  // #region agent log
+  if (typeof window !== "undefined") {
+    fetch('http://127.0.0.1:7243/ingest/e32a33c2-08d6-418c-9317-4d81ec6888fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layers.ts:77',message:'TIPG_URL constructed',data:{port:window.location.port,origin:window.location.origin,TIPG_URL:url},timestamp:Date.now(),hypothesisId:'G'})}).catch(()=>{});
+  }
+  // #endregion
+  return url;
+})();

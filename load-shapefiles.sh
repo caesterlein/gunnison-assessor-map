@@ -8,7 +8,7 @@ set -e
 DB_HOST="${DB_HOST:-localhost}"
 DB_USER="${DB_USER:-postgres}"
 DB_NAME="${DB_NAME:-gunnison}"
-DB_PASS="${PGPASSWORD:-postgres}"
+DB_PASS="${PGPASSWORD}"
 
 GISDATA_DIR="${GISDATA_DIR:-/GISData}"
 
