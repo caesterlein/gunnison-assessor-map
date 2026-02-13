@@ -1,11 +1,12 @@
-import { LAYERS } from "../config/layers";
+import type { LayerConfig } from "../config/types";
 
 interface LayerMenuProps {
   enabledLayers: Set<string>;
   onToggleLayer: (layerId: string) => void;
+  layers: LayerConfig[];
 }
 
-export function LayerMenu({ enabledLayers, onToggleLayer }: LayerMenuProps) {
+export function LayerMenu({ enabledLayers, onToggleLayer, layers }: LayerMenuProps) {
   return (
     <div
       style={{
@@ -25,7 +26,7 @@ export function LayerMenu({ enabledLayers, onToggleLayer }: LayerMenuProps) {
         Layers
       </h3>
       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-        {LAYERS.map((layer) => (
+        {layers.map((layer) => (
           <label
             key={layer.id}
             style={{

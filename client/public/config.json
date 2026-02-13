@@ -1,0 +1,74 @@
+{
+  "tipgUrl": null,
+  "schemaPrefix": "gunnison",
+  "defaultEnabledLayers": ["taxparcelassessor", "road", "address"],
+  "hiddenCollections": [],
+  "layers": {
+    "address": {
+      "name": "Addresses",
+      "geometryType": "Point",
+      "color": "#e41a1c",
+      "order": 0
+    },
+    "driveway": {
+      "name": "Driveways",
+      "geometryType": "LineString",
+      "color": "#984ea3",
+      "order": 1
+    },
+    "exempt": {
+      "name": "Exempt",
+      "geometryType": "Polygon",
+      "color": "#4daf4a",
+      "order": 2
+    },
+    "jurisdictions": {
+      "name": "Jurisdictions",
+      "geometryType": "Polygon",
+      "color": "#ff7f00",
+      "order": 3
+    },
+    "road": {
+      "name": "Roads",
+      "geometryType": "LineString",
+      "color": "#ff6600",
+      "order": 4
+    },
+    "sections": {
+      "name": "Sections",
+      "geometryType": "Polygon",
+      "color": "#a65628",
+      "order": 5
+    },
+    "subdivision": {
+      "name": "Subdivisions",
+      "geometryType": "Polygon",
+      "color": "#f781bf",
+      "order": 6
+    },
+    "taxdistrict": {
+      "name": "Tax Districts",
+      "geometryType": "Polygon",
+      "color": "#999999",
+      "order": 7
+    },
+    "taxparcelassessor": {
+      "name": "Tax Parcels",
+      "geometryType": "Polygon",
+      "color": "#3388ff",
+      "order": 8
+    },
+    "towns": {
+      "name": "Towns",
+      "geometryType": "Polygon",
+      "color": "#377eb8",
+      "order": 9
+    },
+    "votingprecincts": {
+      "name": "Voting Precincts",
+      "geometryType": "Polygon",
+      "color": "#e6ab02",
+      "order": 10
+    }
+  }
+}
